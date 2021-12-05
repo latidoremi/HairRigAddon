@@ -7,7 +7,7 @@ In the original file, hair particles are rigged using a script. Since scripting 
 
 # Tutorial
 
-This addon works pretty much the same way as the original script does, the program will constantly move the hair keys to match the target mesh vertex positions by indices, so that any deformation made on the target mesh, the hair particles will follow.
+This addon works pretty much the same way as the original script does, a handler function will constantly move the hair keys to match the target mesh vertex positions by indices, so that any deformation made on the target mesh, the hair particles will follow.
 
 Install the .py file like any other addons
 
@@ -23,7 +23,7 @@ Select any object that has hair particle modifier, a uilist will show up
 
 Hit the add button to add a hair rig layer
 
-A hair rig layer is a custom property store in each object, each layer stores 3 properties:
+A hair rig layer is a custom property stored in each object, each layer stores 3 sub-properties:
 
 - **update:** an on/off switch of the update state of the layer
 - **particle system:** name of the particle system that you want to control by the target
@@ -100,3 +100,6 @@ Bind the target mesh to an armature
 Turn on layer update and global update, now you can use armature to control hair particles
 
 
+## Link to other files
+
+Hair rig layer data are stored in Object level and will not lose when objects being linked to other files, but the hair rig object list is stored in Scene level, this list will be read by the handler function, so even an object has hair rig layer data, if it is not in the list, hair particles will not update, this design is mainly for performance efficiency. To recalculate the list, simply press the **Initialize** button right beside the **Global Update** switch, and you're good to go.
