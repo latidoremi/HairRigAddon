@@ -71,11 +71,11 @@ In this example I make a braid mesh.
 
 Go to the **Target Mesh Specials** menu, hit the **Mesh to Hair** button
 
-Note that this operator does allow messy vertex order, but there're some limitations.
+Note that this operator does allow random vertex order, but there's one limitation.
 
 <img src="https://github.com/latidoremi/private_repo/blob/main/mesh_to_hair.png" width = "279" height = "271" alt="" align=center />
 
-Each hair particle(strand) has it's own direction like curves, in this operater, end vertex(vertex links to only 1 edge) with a lower index number of a single mesh line defines the root to generate hair from, the order of the rest of the vertices of the same mesh line does not affect the result. However if the root vertex is wrong, the hair will flip (sorry I can't think of a better way to find root vertex...)
+Each hair particle(strand) has it's own direction like curves, in this operater, end vertex(vertex links to only 1 edge) with a lower index number of a single mesh line defines the root to generate hair from, the order of the rest of the vertices of the same mesh line does not affect the result. However if the root vertex is wrong, the hair will flip (sorry currently I can't think of a better way to find root vertex...)
 
 Use the measureit addon that comes with blender to visualize vertex indices.
 
