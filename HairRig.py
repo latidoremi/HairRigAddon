@@ -91,12 +91,13 @@ def remove_from_scene(context, ob):
         scene.hair_rig_objects.remove(index)
 
 def toggle_update(ob, toggle):
-    if toggle==True: # Update
-        for layer in ob.hair_rig:
-            layer.hair_rig_update=True
-    else: # Pause
-        for layer in ob.hair_rig:
-            layer.hair_rig_update=False
+    if ob.hair_rig:
+        if toggle==True: # Update
+            for layer in ob.hair_rig:
+                layer.hair_rig_update=True
+        else: # Pause
+            for layer in ob.hair_rig:
+                layer.hair_rig_update=False
 
 
 def get_bmesh_linked(start_index, bm):
@@ -125,6 +126,7 @@ def get_bmesh_linked(start_index, bm):
     return linked_verts
 
 def get_bmesh_islands(bm):
+    bm.verts.ensure_lookup_table()
     for v in bm.verts:v.tag=False
     
     islands=[]
@@ -139,7 +141,14 @@ def get_bmesh_islands(bm):
             index_pool.remove(v.index)
         if not index_pool:
             break
+        
         next_idx=index_pool[0]
+        
+        # look for end vertex
+        for n in index_pool:
+            if len(bm.verts[n].link_edges)==1: 
+                next_idx=n
+                break
     
     return islands 
 
@@ -162,6 +171,7 @@ def add_hair(ob, key_list):
     bpy.ops.object.mode_set(mode='PARTICLE_EDIT')
     
     bpy.ops.wm.tool_set_by_id(name="builtin_brush.Comb")
+    bpy.context.scene.tool_settings.particle_edit.use_emitter_deflect = False
     bpy.ops.particle.brush_edit(stroke=[{"name":"", "location":(0, 0, 0), "mouse":(0, 0), "mouse_event":(0, 0), "pressure":0, "size":0, "pen_flip":False, "x_tilt":0, "y_tilt":0, "time":0, "is_start":False}])
     
     bpy.ops.particle.select_all(action='SELECT')
@@ -190,10 +200,19 @@ def add_hair(ob, key_list):
     
     r.view_matrix = orig_mtx
     r.view_perspective = orig_persp
-    
-    
+
 
 # operators
+class HAIRRRIG_mesh_ops_public():
+    @classmethod
+    def poll(cls, context):
+        ob = context.object
+        if ob.hair_rig:
+            layer = ob.hair_rig[ob.hair_rig_active_layer_index]
+            if layer.hair_rig_particle_system and layer.hair_rig_target:
+                return True
+        return False
+
 class HAIRRIG_OT_initialize(bpy.types.Operator):
     """recalc scene hair rig objects"""
     bl_idname = "hair_rig.initialize"
@@ -218,10 +237,6 @@ class HAIRRIG_OT_add_layer(bpy.types.Operator):
     bl_label = "Add Layer"
     bl_options = {'UNDO'}
     
-    @classmethod
-    def poll(cls, context):
-        return context.active_object is not None
-    
     def execute(self, context):
         ob=context.object
         
@@ -244,7 +259,7 @@ class HAIRRIG_OT_remove_layer(bpy.types.Operator):
     
     @classmethod
     def poll(cls, context):
-        return context.active_object.hair_rig
+        return context.object.hair_rig
     
     def execute(self, context):
         scene=context.scene
@@ -271,7 +286,7 @@ class HAIRRIG_OT_move_layer(bpy.types.Operator):
     
     @classmethod
     def poll(cls, context):
-        return context.active_object.hair_rig
+        return context.object.hair_rig
     
     def execute(self, context):
         ob=context.object
@@ -323,11 +338,6 @@ class HAIRRIG_OT_toggle_update(bpy.types.Operator):
     type: bpy.props.BoolProperty(name='Local/Global')# True:Local, False:Global
     toggle: bpy.props.BoolProperty(name='toggle_type')# True:Update. False:Pause
     
-    @classmethod
-    def poll(cls, context):
-        ob=context.object
-        return ob.hair_rig
-    
     def execute(self, context):
         if self.type==True: # Local
             ob=context.object
@@ -352,8 +362,12 @@ class HAIRRIG_OT_set_active(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         ob=context.object
-        return ob.hair_rig[ob.hair_rig_active_layer_index].hair_rig_particle_system
-    
+        if ob.hair_rig:
+            layer = ob.hair_rig[ob.hair_rig_active_layer_index]
+            if layer.hair_rig_particle_system:
+                return True
+        return False
+        
     def execute(self, context):
         ob=context.object
         index=[p.name for p in ob.particle_systems].index(self.name)
@@ -361,24 +375,17 @@ class HAIRRIG_OT_set_active(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class HAIRRIG_OT_hair_to_mesh(bpy.types.Operator):
+class HAIRRIG_OT_hair_to_mesh(bpy.types.Operator, HAIRRRIG_mesh_ops_public):
     """generate mesh from hair"""
     bl_idname='hair_rig.hair_to_mesh'
-    bl_label='Hair To Mesh'
+    bl_label='Hair to Mesh'
     bl_options = {'UNDO'}
-    
-    @classmethod
-    def poll(cls, context):
-        ob=context.object
-        item=ob.hair_rig[ob.hair_rig_active_layer_index]
-        
-        return item.hair_rig_particle_system and item.hair_rig_target
     
     def execute(self, context):
         vertices=[]
         edges=[]
         faces=[]
-                
+        
         deps = context.evaluated_depsgraph_get()
         ob = context.object
         ob_eval = ob.evaluated_get(deps)
@@ -403,14 +410,13 @@ class HAIRRIG_OT_hair_to_mesh(bpy.types.Operator):
         
         return {'FINISHED'}
 
-class HAIRRIG_OT_hair_shape_to_mesh(bpy.types.Operator):
-    """match mesh vertices locations to hair keys locations by indices"""
+class HAIRRIG_OT_hair_shape_to_mesh(bpy.types.Operator, HAIRRRIG_mesh_ops_public):
+    """match mesh vertex locations to hair key locations by indices"""
     bl_idname='hair_rig.hair_shape_to_mesh'
-    bl_label='Hair Shape To Mesh'
+    bl_label='Hair Shape to Mesh'
     bl_options = {'UNDO'}
     
     def execute(self, context):
-        
         deps = context.evaluated_depsgraph_get()
         ob = context.object
         ob_eval = ob.evaluated_get(deps)
@@ -428,13 +434,13 @@ class HAIRRIG_OT_hair_shape_to_mesh(bpy.types.Operator):
         
         return {'FINISHED'}
 
-class HAIRRIG_OT_mesh_to_hair(bpy.types.Operator):
+class HAIRRIG_OT_mesh_to_hair(bpy.types.Operator, HAIRRRIG_mesh_ops_public):
     """generate hair from mesh edges"""
     bl_idname='hair_rig.mesh_to_hair'
-    bl_label='Mesh To Hair'
-    bl_options = {'UNDO'}
-    
-#    detect_loops: bpy.props.BoolProperty(name='detect_loops', default = True)
+    bl_label='Mesh to Hair'
+    bl_options = {'UNDO', 'REGISTER'}
+        
+    regenerate_target: bpy.props.BoolProperty(name='Regenerate Target', default = True)
     
     def execute(self, context):
         deps = context.evaluated_depsgraph_get()
@@ -452,18 +458,36 @@ class HAIRRIG_OT_mesh_to_hair(bpy.types.Operator):
         
         add_hair(ob, key_list) #add hair
         
-#        if self.detect_loops:
-#            vector_list = [j.co for i in islands for j in i]
-#        else:
-#            vector_list = [v.co for v in target_object_eval.data.vertices]
-        
         vector_list = [j.co for i in islands for j in i]
+        shape_hair(deps, ob, ob.particle_systems[layer.hair_rig_particle_system], vector_list)
+        
+        if self.regenerate_target:
+            bpy.ops.hair_rig.hair_to_mesh()
+        
+        return {'FINISHED'}
+
+class HAIRRIG_OT_mesh_shape_to_hair(bpy.types.Operator, HAIRRRIG_mesh_ops_public):
+    """match hair key locations to mesh vertex locations by indices"""
+    bl_idname='hair_rig.mesh_shape_to_hair'
+    bl_label='Mesh Shape to Hair'
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        deps = context.evaluated_depsgraph_get()
+        ob = context.object
+        layer=ob.hair_rig[ob.hair_rig_active_layer_index]
+        
+        target_object=layer.hair_rig_target
+        target_object_eval= target_object.evaluated_get(deps)
+        
+        vector_list = [v.co for v in target_object_eval.data.vertices]
+        
         shape_hair(deps, ob, ob.particle_systems[layer.hair_rig_particle_system], vector_list)
         
         return {'FINISHED'}
     
-
-
+    
+    
 class HAIRRIG_UL_uilist(bpy.types.UIList):
     
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
@@ -521,7 +545,8 @@ class HAIRRIG_MT_mesh_menu(bpy.types.Menu):
         
         layout.operator('hair_rig.hair_to_mesh', text='Hair to Mesh')
         layout.operator('hair_rig.hair_shape_to_mesh', text='Hair Shape to Mesh')
-        layout.operator('hair_rig.mesh_to_hair', text='Mesh to Hair (Unstable)')
+        layout.operator('hair_rig.mesh_to_hair', text='Mesh to Hair (BETA)')
+        layout.operator('hair_rig.mesh_shape_to_hair', text='Mesh Shape to Hair')
 
 
 # main panel
@@ -605,6 +630,7 @@ classes=[
     HAIRRIG_OT_hair_to_mesh,
     HAIRRIG_OT_hair_shape_to_mesh,
     HAIRRIG_OT_mesh_to_hair,
+    HAIRRIG_OT_mesh_shape_to_hair,
     
     HAIRRIG_UL_uilist,
     HAIRRIG_MT_layer_menu,
