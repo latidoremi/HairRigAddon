@@ -39,7 +39,7 @@ You can either create target mesh from hair, or create hair from target mesh
 
 Comb the hair any shape you like, you can change hair keys as well, hair keys doesn't have to be uniform
 
-<img src="https://github.com/latidoremi/private_repo/blob/main/hr06.png" width = "544" height = "330" alt="" align=center />
+<img src="https://github.com/latidoremi/private_repo/blob/main/hr06.png" width = "454" height = "290" alt="" align=center />
 
 Select a target object, target object has to be 'MESH' type, in this example I select a cube. Go to the **Target Mesh Specials** menu, hit the **Hair to Mesh** button
 
@@ -67,31 +67,36 @@ Rules for the target mesh:
 
 In this example I make a braid mesh.
 
-<img src="https://github.com/latidoremi/private_repo/blob/main/hr12.png" width = "442" height = "290" alt="" align=center />
+<img src="https://github.com/latidoremi/private_repo/blob/main/hr12.png" width = "450" height = "271" alt="" align=center />
 
 Go to the **Target Mesh Specials** menu, hit the **Mesh to Hair** button
 
-Note that each hair particle(strand) has it's own direction like curves, in this operater, end vertex(vertex links to only 1 edge) with a lower index number of a single mesh line defines the root to generate hair from, the order of the rest of the vertices of the same mesh line does not affect the result. Use the measureit addon that comes with blender to visulize the vertex index.
+Note that this operator does allow messy vertex order, but there're some limitations.
 
-<img src="https://github.com/latidoremi/private_repo/blob/main/mesh_to_hair.png" width = "354" height = "343" alt="" align=center />
+<img src="https://github.com/latidoremi/private_repo/blob/main/mesh_to_hair.png" width = "279" height = "271" alt="" align=center />
+
+Each hair particle(strand) has it's own direction like curves, in this operater, end vertex(vertex links to only 1 edge) with a lower index number of a single mesh line defines the root to generate hair from, the order of the rest of the vertices of the same mesh line does not affect the result. However if the root vertex is wrong, the hair will flip (sorry I can't think of a better way to find root vertex...)
+
+Use the measureit addon that comes with blender to visulize the vertex index.
+
 <img src="https://github.com/latidoremi/private_repo/blob/main/hr11.png" width = "354" height = "343" alt="" align=center />
 
-One way to make sure that the vertex order is right is to convert the target mesh to curve, go to curve edit mode, turn on draw normals in viewport overlays, you can see if the curves are pointing in the right direction (in most cases should be pointing away from the particle emitter), if not, switch curve direction, once the checking is done, convert back to mesh.
+One way to make sure that the vertex order is right is to convert the target mesh to curve, go to curve edit mode, turn on draw normals under viewport overlays, you can see if the curves are pointing in the right direction (in most cases should be pointing away from the particle emitter), if not, switch curve direction, once the checking is done, convert back to mesh.
 
-Even though it's ok to generate hair with messy vertex order, the function that moves the particles does not accept messy vertex order!(it is possible to allow messy vertex order using mapping list but it's not performance efficient) So, if you are going to use the same mesh to later control the hair particles, hit the **Hair to Mesh** button along
-
-<img src="https://github.com/latidoremi/private_repo/blob/main/hr13.png" width = "442" height = "290" alt="" align=center />
+<img src="https://github.com/latidoremi/private_repo/blob/main/hr13.png" width = "381" height = "343" alt="" align=center />
 
 Now the hair is generated
 
-<img src="https://github.com/latidoremi/private_repo/blob/main/hr14.png" width = "442" height = "290" alt="" align=center />
+<img src="https://github.com/latidoremi/private_repo/blob/main/hr14.png" width = "555" height = "360" alt="" align=center />
 
 Tweak some settings if you like
 
+<img src="https://github.com/latidoremi/private_repo/blob/main/hr15.png" width = "508" height = "274" alt="" align=center />
+
 Bind the target mesh to an armature
 
+<img src="https://github.com/latidoremi/private_repo/blob/main/hr16.png" width = "432" height = "274" alt="" align=center />
 
-
-
+Turn on layer update and global update, now you can use armature to control hair particles
 
 
