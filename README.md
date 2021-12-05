@@ -1,6 +1,6 @@
 # HairRigAddon
 
-This addon is inspired by the character rig file from the Blender open source movie Sprit Fright.
+This addon is inspired by the character rig file from the Blender open source movie *Sprit Fright*.
 
 In the original file, hair particles are rigged using a script. Since scripting isn't for most Blender users, I make this addon to help artists to animate hair particles more easily without scripting.
 
