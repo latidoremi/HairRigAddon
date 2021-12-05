@@ -77,7 +77,7 @@ Note that this operator does allow messy vertex order, but there're some limitat
 
 Each hair particle(strand) has it's own direction like curves, in this operater, end vertex(vertex links to only 1 edge) with a lower index number of a single mesh line defines the root to generate hair from, the order of the rest of the vertices of the same mesh line does not affect the result. However if the root vertex is wrong, the hair will flip (sorry I can't think of a better way to find root vertex...)
 
-Use the measureit addon that comes with blender to visulize the vertex index.
+Use the measureit addon that comes with blender to visualize vertex indices.
 
 <img src="https://github.com/latidoremi/private_repo/blob/main/hr11.png" width = "354" height = "343" alt="" align=center />
 
