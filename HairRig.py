@@ -434,7 +434,7 @@ class HAIRRIG_OT_mesh_to_hair(bpy.types.Operator):
     bl_label='Mesh To Hair'
     bl_options = {'UNDO'}
     
-    detect_loops: bpy.props.BoolProperty(name='detect_loops', default = True)
+#    detect_loops: bpy.props.BoolProperty(name='detect_loops', default = True)
     
     def execute(self, context):
         deps = context.evaluated_depsgraph_get()
@@ -452,11 +452,12 @@ class HAIRRIG_OT_mesh_to_hair(bpy.types.Operator):
         
         add_hair(ob, key_list) #add hair
         
-        if self.detect_loops:
-            vector_list = [j.co for i in islands for j in i]
-        else:
-            vector_list = [v.co for v in target_object_eval.data.vertices]
-
+#        if self.detect_loops:
+#            vector_list = [j.co for i in islands for j in i]
+#        else:
+#            vector_list = [v.co for v in target_object_eval.data.vertices]
+        
+        vector_list = [j.co for i in islands for j in i]
         shape_hair(deps, ob, ob.particle_systems[layer.hair_rig_particle_system], vector_list)
         
         return {'FINISHED'}
@@ -520,7 +521,7 @@ class HAIRRIG_MT_mesh_menu(bpy.types.Menu):
         
         layout.operator('hair_rig.hair_to_mesh', text='Hair to Mesh')
         layout.operator('hair_rig.hair_shape_to_mesh', text='Hair Shape to Mesh')
-        layout.operator('hair_rig.mesh_to_hair', text='Mesh to Hair (WIP)')
+        layout.operator('hair_rig.mesh_to_hair', text='Mesh to Hair (Unstable)')
 
 
 # main panel
