@@ -23,7 +23,7 @@ bl_info = {
     "blender": (3, 0, 0),
     "location": "Sidebar > Hair Rig",
     "warning": "Experimental",
-    "category": "Animation",
+    "category": "Rigging",
 }
 
 from . import hair_rig
