@@ -21,12 +21,14 @@ import bpy,bmesh
 from bpy.app.handlers import persistent
 
 def find_particle_modifier(ob, particle_system):
+    '''return the particle modifier of the given particle system'''
     for mod in ob.modifiers:
-        if mod.type == mod.type == 'PARTICLE_SYSTEM' and mod.particle_system==particle_system:
+        if mod.type == 'PARTICLE_SYSTEM' and mod.particle_system == particle_system:
             return mod
     return None
 
 def shape_hair(depsgraph, hair_object, particle_system, vector_list):
+    '''set hair key locations with vectors in the vector_list'''
     particle_mod = find_particle_modifier(hair_object, particle_system)
     
     hair_object_eval = hair_object.evaluated_get(depsgraph)
@@ -43,8 +45,9 @@ def shape_hair(depsgraph, hair_object, particle_system, vector_list):
 
 @persistent
 def set_particles(scene, depsgraph):
+    '''handler function, update all hair rig objects'''
     if scene and scene.hair_rig_global_update:
-        for i in scene.hair_rig_objects:
+        for i in scene.hair_rig_object_list:
             ob = i.hair_object
             for layer in ob.hair_rig:
                 hair_object = ob
@@ -55,7 +58,7 @@ def set_particles(scene, depsgraph):
                   
                 if not update:
                     continue
-                if target_object==None:
+                if not target_object:
                     continue
                 if not ps_name:
                     continue
@@ -64,6 +67,7 @@ def set_particles(scene, depsgraph):
                 shape_hair(depsgraph, hair_object, hair_object.particle_systems[ps_name], vector_list)
 
 def has_hair(ob):
+    '''check if an object has hair particle modifiers'''
     if ob.particle_systems:
         for ps in ob.particle_systems:
             if ps.settings.type == 'HAIR':
@@ -71,34 +75,38 @@ def has_hair(ob):
     return False
 
 def remove_handler_function(handler, function):
+    '''remove function from the handler'''
     if handler:
         for f in handler:
             if f.__name__ == function.__name__:
                 handler.remove(f)
 
 def append_handler_function(handler, function):
+    '''remove function from the handler and append to it'''
     remove_handler_function(handler, function)
     handler.append(function)
 
-
 def add_to_scene(context, ob):
+    '''add object to scene hair rig object list'''
     scene = context.scene
-    objects = [i.hair_object for i in scene.hair_rig_objects]
+    objects = [i.hair_object for i in scene.hair_rig_object_list]
     if ob not in objects:
-        item = scene.hair_rig_objects.add()
+        item = scene.hair_rig_object_list.add()
         item.hair_object=ob
 
 def remove_from_scene(context, ob):
+    '''remove object from scene hair rig object list'''
     scene = context.scene
     index = -1
-    for i, item in enumerate(scene.hair_rig_objects):
+    for i, item in enumerate(scene.hair_rig_object_list):
         if item.hair_object == ob:
             index = i
             break
     if index != -1:
-        scene.hair_rig_objects.remove(index)
+        scene.hair_rig_object_list.remove(index)
 
 def toggle_update(ob, toggle):
+    '''toggle the update state of all hair rig layers of the object'''
     if ob.hair_rig:
         if toggle == True: # Update
             for layer in ob.hair_rig:
@@ -109,7 +117,8 @@ def toggle_update(ob, toggle):
 
 
 def get_bmesh_linked(start_index, bm):
-    linked_verts = []
+    '''return vertices of the mesh island that the vertex with the start_index is on'''
+    link_verts = []
     bm.verts.ensure_lookup_table()
     
     start_vert = bm.verts[start_index]
@@ -117,7 +126,7 @@ def get_bmesh_linked(start_index, bm):
     next_layer = [start_vert]
     while True:
         current_layer = next_layer
-        linked_verts += current_layer
+        link_verts += current_layer
         next_layer = []
         
         #calc next_layer
@@ -131,9 +140,10 @@ def get_bmesh_linked(start_index, bm):
         if not next_layer:
             break
         
-    return linked_verts
+    return link_verts
 
 def get_bmesh_islands(bm):
+    '''return islands of the given bmesh'''
     bm.verts.ensure_lookup_table()
     for v in bm.verts:
         v.tag = False
@@ -162,6 +172,7 @@ def get_bmesh_islands(bm):
     return islands 
 
 def add_hair(ob, key_list):
+    '''add hair particles with keys in the key_list'''
     mirror = ob.data.use_mirror_x
     ob.data.use_mirror_x = False
     
@@ -223,14 +234,14 @@ class HAIRRRIG_mesh_ops_public():
         return False
 
 class HAIRRIG_OT_initialize(bpy.types.Operator):
-    """recalc scene hair rig objects"""
+    """recalc scene hair rig object list"""
     bl_idname = "hair_rig.initialize"
     bl_label = "Initialize"
     bl_options = {'UNDO'}
     
     def execute(self, context):
         scene = context.scene
-        scene.hair_rig_objects.clear()
+        scene.hair_rig_object_list.clear()
         for ob in bpy.data.objects:
             if ob.hair_rig:
                 add_to_scene(context, ob)
@@ -335,7 +346,7 @@ class HAIRRIG_OT_clear_data(bpy.types.Operator):
             for ob in bpy.data.objects:
                 ob.hair_rig.clear()
                 ob.hair_rig_active_layer_index = 0
-            scene.hair_rig_objects.clear()
+            scene.hair_rig_object_list.clear()
         return {'FINISHED'}
 
 
@@ -354,7 +365,7 @@ class HAIRRIG_OT_toggle_update(bpy.types.Operator):
         
         else: # Global
             scene = context.scene
-            objects = [i.hair_object for i in scene.hair_rig_objects]
+            objects = [i.hair_object for i in scene.hair_rig_object_list]
             for ob in objects:
                 toggle_update(ob, self.toggle)
         
@@ -385,7 +396,7 @@ class HAIRRIG_OT_set_active(bpy.types.Operator):
 
 
 class HAIRRIG_OT_hair_to_mesh(bpy.types.Operator, HAIRRRIG_mesh_ops_public):
-    """generate mesh from hair"""
+    """generate mesh lines from hair"""
     bl_idname = 'hair_rig.hair_to_mesh'
     bl_label = 'Hair to Mesh'
     bl_options = {'UNDO'}
@@ -420,7 +431,7 @@ class HAIRRIG_OT_hair_to_mesh(bpy.types.Operator, HAIRRRIG_mesh_ops_public):
         return {'FINISHED'}
 
 class HAIRRIG_OT_hair_shape_to_mesh(bpy.types.Operator, HAIRRRIG_mesh_ops_public):
-    """match mesh vertex locations to hair key locations by indices"""
+    """set mesh vertex locations with hair key locations by indices"""
     bl_idname = 'hair_rig.hair_shape_to_mesh'
     bl_label = 'Hair Shape to Mesh'
     bl_options = {'UNDO'}
@@ -444,7 +455,7 @@ class HAIRRIG_OT_hair_shape_to_mesh(bpy.types.Operator, HAIRRRIG_mesh_ops_public
         return {'FINISHED'}
 
 class HAIRRIG_OT_mesh_to_hair(bpy.types.Operator, HAIRRRIG_mesh_ops_public):
-    """generate hair from mesh edges"""
+    """generate hair from mesh lines"""
     bl_idname = 'hair_rig.mesh_to_hair'
     bl_label = 'Mesh to Hair'
     bl_options = {'UNDO', 'REGISTER'}
@@ -476,7 +487,7 @@ class HAIRRIG_OT_mesh_to_hair(bpy.types.Operator, HAIRRRIG_mesh_ops_public):
         return {'FINISHED'}
 
 class HAIRRIG_OT_mesh_shape_to_hair(bpy.types.Operator, HAIRRRIG_mesh_ops_public):
-    """match hair key locations to mesh vertex locations by indices"""
+    """set hair key locations with mesh vertex locations by indices"""
     bl_idname = 'hair_rig.mesh_shape_to_hair'
     bl_label = 'Mesh Shape to Hair'
     bl_options = {'UNDO'}
@@ -498,7 +509,7 @@ class HAIRRIG_OT_mesh_shape_to_hair(bpy.types.Operator, HAIRRRIG_mesh_ops_public
     
 #uilist
 class HAIRRIG_UL_uilist(bpy.types.UIList):
-    
+    """hair rig uilist"""
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             if item.hair_rig_update:
@@ -519,6 +530,7 @@ class HAIRRIG_UL_uilist(bpy.types.UIList):
 
 # menus
 class HAIRRIG_MT_layer_menu(bpy.types.Menu):
+    """menu for hair rig layer special operators"""
     bl_label = 'Layer Specials'
     
     def draw(self, context):
@@ -547,6 +559,7 @@ class HAIRRIG_MT_layer_menu(bpy.types.Menu):
         layout.operator('hair_rig.clear_data', text = 'Clear Hair Rig Data (Global)').type = False # Global
 
 class HAIRRIG_MT_mesh_menu(bpy.types.Menu):
+    """menu for target mesh special operators"""
     bl_label = 'Target Mesh Specials'
     
     def draw(self, context):
@@ -560,6 +573,7 @@ class HAIRRIG_MT_mesh_menu(bpy.types.Menu):
 
 # main panel
 class HAIRRIG_PT_hair_rig(bpy.types.Panel):
+    """hair rig main panel"""
     bl_category = "Hair Rig"
     bl_label = "Hair Rig Layers"
     bl_space_type = "VIEW_3D"
@@ -578,38 +592,43 @@ class HAIRRIG_PT_hair_rig(bpy.types.Panel):
         row.prop(scene, 'hair_rig_global_update', text = 'Global Update', icon = 'PLAY')
         row.operator('hair_rig.initialize', text = '', icon = 'FILE_REFRESH')
         
-        if ob.type=='MESH':
-            if has_hair(ob):
-                row = layout.row(align = True)
-                row.template_list("HAIRRIG_UL_uilist", "", ob,"hair_rig", ob, "hair_rig_active_layer_index")
-                
-                subcol = row.column(align = True)
-                subcol.operator('hair_rig.add_layer',text = '', icon = 'ADD')
-                subcol.operator('hair_rig.remove_layer',text = '', icon = 'REMOVE')
-                
-                subcol.separator()
-                subcol.menu('HAIRRIG_MT_layer_menu',text = '',icon = 'DOWNARROW_HLT')
-                
-                subcol.separator()
-                subcol.operator('hair_rig.move_layer',text = '', icon = 'TRIA_UP').direction = True #UP
-                subcol.operator('hair_rig.move_layer',text = '', icon = 'TRIA_DOWN').direction = False #DOWN
-                
-                if ob.hair_rig:
-                    item = ob.hair_rig[ob.hair_rig_active_layer_index]
-                    col = layout.column()
-                    subrow = col.row(align = True)
-                    subrow.prop_search(item, 'hair_rig_particle_system',ob, 'particle_systems',text = '')
-                    
-                    subrow.operator('hair_rig.set_active',text = '', icon = 'FORWARD').name = item.hair_rig_particle_system
-                    
-                    subrow = col.row(align = True)
-                    subrow.prop(item, 'hair_rig_target', text = '')
-                    subrow.menu('HAIRRIG_MT_mesh_menu',text = '',icon = 'COLLAPSEMENU')
-            else:
-                layout.label(text = 'object has no hair particle modifier')
+        if not ob:
+            layout.label(text = 'no object selected')
+            return
         
-        else:
+        if ob.type!='MESH':
             layout.label(text = 'non mesh type object')
+            return
+        
+        if not has_hair(ob):
+            layout.label(text = 'object has no hair particle modifier')
+            return
+        
+        row = layout.row(align = True)
+        row.template_list("HAIRRIG_UL_uilist", "", ob,"hair_rig", ob, "hair_rig_active_layer_index")
+        
+        subcol = row.column(align = True)
+        subcol.operator('hair_rig.add_layer',text = '', icon = 'ADD')
+        subcol.operator('hair_rig.remove_layer',text = '', icon = 'REMOVE')
+        
+        subcol.separator()
+        subcol.menu('HAIRRIG_MT_layer_menu',text = '',icon = 'DOWNARROW_HLT')
+        
+        subcol.separator()
+        subcol.operator('hair_rig.move_layer',text = '', icon = 'TRIA_UP').direction = True #UP
+        subcol.operator('hair_rig.move_layer',text = '', icon = 'TRIA_DOWN').direction = False #DOWN
+        
+        if ob.hair_rig:
+            item = ob.hair_rig[ob.hair_rig_active_layer_index]
+            col = layout.column()
+            subrow = col.row(align = True)
+            subrow.prop_search(item, 'hair_rig_particle_system',ob, 'particle_systems',text = '')
+            
+            subrow.operator('hair_rig.set_active',text = '', icon = 'FORWARD').name = item.hair_rig_particle_system
+            
+            subrow = col.row(align = True)
+            subrow.prop(item, 'hair_rig_target', text = '')
+            subrow.menu('HAIRRIG_MT_mesh_menu',text = '',icon = 'COLLAPSEMENU')
 
 
 # object properties
@@ -654,7 +673,7 @@ def register():
     bpy.types.Object.hair_rig = bpy.props.CollectionProperty(type = HAIRRIG_object_properties)
     bpy.types.Object.hair_rig_active_layer_index = bpy.props.IntProperty(name = 'Hair Rig Active Layer Index', default = 0, min = 0)
     
-    bpy.types.Scene.hair_rig_objects = bpy.props.CollectionProperty(type = HAIRRIG_scene_objects)
+    bpy.types.Scene.hair_rig_object_list = bpy.props.CollectionProperty(type = HAIRRIG_scene_objects)
     bpy.types.Scene.hair_rig_global_update = bpy.props.BoolProperty(name = 'Hair Rig Global Update',description = 'Hair Rig Global Update', default = False)
     
     append_handler_function(bpy.app.handlers.depsgraph_update_post, set_particles)
@@ -667,7 +686,7 @@ def unregister():
     del bpy.types.Object.hair_rig
     del bpy.types.Object.hair_rig_active_layer_index
     
-    del bpy.types.Scene.hair_rig_objects
+    del bpy.types.Scene.hair_rig_object_list
     del bpy.types.Scene.hair_rig_global_update
     
     remove_handler_function(bpy.app.handlers.depsgraph_update_post, set_particles)

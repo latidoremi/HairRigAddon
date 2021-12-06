@@ -29,12 +29,12 @@ bl_info = {
 from . import hair_rig
 
 def register():
-    print('Registered Hair Rig')
     hair_rig.register()
+    print('Registered Hair Rig')
 
 def unregister():
-    print('Unregistered Hair Rig')
     hair_rig.unregister()
+    print('Unregistered Hair Rig')
 
 if __name__ == "__main__":
     register()
