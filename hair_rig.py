@@ -663,10 +663,7 @@ def register():
     
 def unregister():
     for c in classes:
-        try:
-            bpy.utils.unregister_class(c)
-        except:
-            pass
+        bpy.utils.unregister_class(c)
     del bpy.types.Object.hair_rig
     del bpy.types.Object.hair_rig_active_layer_index
     
