@@ -93,7 +93,7 @@ Tweak some settings if you like
 
 <img src="https://github.com/latidoremi/private_repo/blob/main/hr15.png" width = "508" height = "274" alt="" align=center />
 
-Bind the target mesh to an armature
+Bind the target mesh to an armature with automatic weights
 
 <img src="https://github.com/latidoremi/private_repo/blob/main/hr16.png" width = "432" height = "274" alt="" align=center />
 
