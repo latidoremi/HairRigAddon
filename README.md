@@ -9,7 +9,7 @@ In the original file, hair particles are rigged using a script. Since scripting 
 
 This addon works pretty much the same way as the original script does, a handler function will constantly move the hair keys to match the target mesh vertex positions by indices, so that any deformation made on the target mesh, the hair particles will follow.
 
-Install the .py file like any other addons
+Install the .zip file like any other addons
 
 <img src="https://github.com/latidoremi/private_repo/blob/main/hr01.png" width = "247" height = "272" alt="" align=center />
 
