@@ -580,7 +580,7 @@ class HAIRRIG_PT_hair_rig(bpy.types.Panel):
     bl_region_type = "UI"
     
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         return context.area.ui_type == 'VIEW_3D'
     
     def draw(self, context):
