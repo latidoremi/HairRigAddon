@@ -25,7 +25,7 @@ Hit the add button to add a hair rig layer
 
 A hair rig layer is a custom property stored in each object, each layer stores 3 sub-properties:
 
-- **update:** an on/off switch of the update state of the layer
+- **update:** an on/off switch of the layer update state
 - **particle system:** name of the particle system that you want to control by the target
 - **target object:** a pointer to the target object that you want to use to control the hair particles
 
@@ -75,13 +75,13 @@ Note that this operator does allow random vertex order, but there's one limitati
 
 <img src="https://github.com/latidoremi/hair_rig_readme_images/blob/main/mesh_to_hair.png" width = "279" height = "271" alt="" align=center />
 
-Each hair particle(strand) has it's own direction like curves, in this operater, end vertex(vertex links to only 1 edge) with a lower index number of a single mesh line defines the root to generate hair from, the order of the rest of the vertices of the same mesh line does not affect the result. However if the root vertex is wrong, the hair will flip (sorry currently I can't think of a better way to find root vertex...)
+Each hair particle(strand) has it's own direction like curves, in each strand, end vertex(vertex links to only 1 edge， each strand has two ends) with a lower index number defines the root to generate hair from, the order of the rest of the vertices does not affect the result. However if the root vertex is wrong, the hair will flip (sorry currently I can't think of a better way to find root vertex...)
 
 Use the measureit addon that comes with blender to visualize vertex indices.
 
 <img src="https://github.com/latidoremi/hair_rig_readme_images/blob/main/hr11.png" width = "354" height = "343" alt="" align=center />
 
-One way to make sure that the vertex order is right is to convert the target mesh to curve, go to curve edit mode, turn on draw normals under viewport overlays, you can see if the curves are pointing in the right direction (in most cases should be pointing away from the particle emitter), if not, switch curve direction, once the checking is done, convert back to mesh.
+One way to make sure that the vertex order is right is to convert the target mesh to curve, go to curve edit mode, turn on draw normals under viewport overlays, you can see if the curves are pointing in the right direction (in most cases should be pointing away from the particle emitter), if not, switch curve direction, and convert back to mesh.
 
 <img src="https://github.com/latidoremi/hair_rig_readme_images/blob/main/hr13.png" width = "381" height = "343" alt="" align=center />
 
