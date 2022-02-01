@@ -75,7 +75,7 @@ Note that this operator does allow random vertex order, but there's one limitati
 
 <img src="https://github.com/latidoremi/hair_rig_readme_images/blob/main/mesh_to_hair.png" width = "279" height = "271" alt="" align=center />
 
-Each hair particle(strand) has it's own direction like curves, in each strand, end vertex(vertex links to only 1 edge，each strand has two ends) with a lower index number defines the root to generate hair from, the order of the rest of the vertices does not affect the result. However if the root vertex is wrong, the hair will flip (sorry currently I can't think of a better way to find root vertex...)
+Each hair particle(strand) has it's own direction like curves, in each strand, end vertex(vertex links to only 1 edge，each strand has two ends) with a lower index number defines the root to generate hair from, the order of the rest of the vertices does not affect the result. However if the root vertex is wrong, the hair strand will flip (sorry currently I can't think of a better way to find root vertex...)
 
 Use the measureit addon that comes with blender to visualize vertex indices.
 
